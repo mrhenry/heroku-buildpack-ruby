@@ -1,6 +1,7 @@
 require "fileutils"
 require "language_pack"
 require "language_pack/rack"
+require "shellwords"
 
 # Rails 2 Language Pack. This is for any Rails 2.x apps.
 class LanguagePack::Rails2 < LanguagePack::Ruby
@@ -47,6 +48,7 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   def compile
     super
     install_plugins
+    install_http_dispatcher_config
   end
 
 private
@@ -94,6 +96,42 @@ private
     super
     set_env_default "RACK_ENV",  "production"
     set_env_default "RAILS_ENV", "production"
+  end
+
+  def install_http_dispatcher_config
+    if File.exists?('.http-dispatcher.json')
+      topic "Using custom http-dispatcher config: .http-dispatcher.json"
+      return true
+    end
+
+    app_name = ENV['APP_NAME'] || ''
+    env_name = ENV['RAILS_ENV'] || 'production'
+
+    if app_name == ""
+      error "APP_NAME environment variable must be set"
+    end
+
+    cmd = default_web_process
+    cmd = Shellwords.split(cmd)
+    cmd = cmd.inspect
+
+    s3_prefix = "/storage/#{app_name}/#{env_name}/assets"
+    s3_prefix = s3_prefix.inspect
+
+    config = <<-CONFIG
+[
+  { "type": "fs", "match": "/", "path": "public"},
+  { "type": "aws-s3", "bucket": "lalala-assets", "match": "/storage/assets", "prefix": #{s3_prefix} },
+  { "type": "proc", "args": #{cmd} }
+]
+CONFIG
+
+    File.open(".http-dispatcher.json", "w+", 0644) do |f|
+      f.write config
+    end
+
+    topic "Using default http-dispatcher config"
+    true
   end
 
 end
