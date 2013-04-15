@@ -48,6 +48,7 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   def compile
     super
     install_plugins
+    migrate_db
     install_http_dispatcher_config
   end
 
@@ -130,6 +131,24 @@ CONFIG
 
     topic "Using default http-dispatcher config"
     true
+  end
+
+  def migrate_db
+    log("db_migrate") do
+
+      puts "Running: rake db:migrate"
+      require 'benchmark'
+      time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake db:migrate 2>&1") }
+
+      if $?.success?
+	log "assets_precompile", :status => "success"
+	puts "Database migration completed (#{"%.2f" % time}s)"
+      else
+	log "assets_precompile", :status => "failure"
+	error "Failed to migrate the database"
+      end
+
+    end
   end
 
 end
