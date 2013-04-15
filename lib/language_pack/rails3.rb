@@ -36,10 +36,6 @@ class LanguagePack::Rails3 < LanguagePack::Rails2
 
 private
 
-  def plugins
-    super.concat(%w( rails3_serve_static_assets )).uniq
-  end
-
   # runs the tasks for the Rails 3.1 asset pipeline
   def run_assets_precompile_rake_task
     log("assets_precompile") do
