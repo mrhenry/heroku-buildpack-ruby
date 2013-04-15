@@ -73,6 +73,7 @@ class LanguagePack::Ruby < LanguagePack::Base
   def compile
     Dir.chdir(build_path)
     remove_vendor_bundle
+    install_http_dispatcher
     install_ruby
     install_jvm
     setup_language_pack_environment
@@ -319,8 +320,8 @@ ERROR
   def install_language_pack_gems
     FileUtils.mkdir_p(slug_vendor_base)
     Dir.chdir(slug_vendor_base) do |dir|
-      gems.each do |gem|
-        run("curl #{VENDOR_URL}/#{gem}.tgz -s -o - | tar xzf -")
+      gems.each do |gem_name|
+	run("curl #{VENDOR_URL}/#{gem_name}.tgz -s -o - | tar xzf -")
       end
       Dir["bin/*"].each {|path| run("chmod 755 #{path}") }
     end
@@ -678,4 +679,34 @@ params = CGI.parse(uri.query || "")
     # need to reinstall language pack gems
     install_language_pack_gems
   end
+
+  HTTP_DISPATCHER_URL = "http://lalala-assets.s3.amazonaws.com/http-dispatcher"
+  HTTP_DISPATCHER_VERSION = "1.0.0"
+
+  def slug_vendor_http_dispatcher
+    "vendor/http-dispatcher-#{HTTP_DISPATCHER_VERSION}"
+  end
+
+  def install_http_dispatcher
+    invalid_version_message = <<ERROR
+Invalid HTTP_DISPATCHER_VERSION specified: #{HTTP_DISPATCHER_VERSION}
+ERROR
+
+    FileUtils.mkdir_p(slug_vendor_http_dispatcher)
+    Dir.chdir(slug_vendor_http_dispatcher) do
+      run("curl #{HTTP_DISPATCHER_URL}/http-dispatcher-#{HTTP_DISPATCHER_VERSION}-linux.tar.gz -s -o - | tar zxf -")
+    end
+    error invalid_version_message unless $?.success?
+
+    bin_dir = "bin"
+    FileUtils.mkdir_p bin_dir
+    Dir["#{slug_vendor_http_dispatcher}/bin/*"].each do |bin|
+      run("ln -s ../#{bin} #{bin_dir}")
+    end
+
+    topic "Using http-dispatcher version: #{HTTP_DISPATCHER_VERSION}"
+
+    true
+  end
+
 end
