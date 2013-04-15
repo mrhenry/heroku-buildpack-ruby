@@ -21,14 +21,20 @@ class LanguagePack::Rack < LanguagePack::Ruby
   end
 
   def default_process_types
-    # let's special case thin here if we detect it
-    web_process = gem_is_bundled?("thin") ?
-                    "bundle exec thin start -R config.ru -e $RACK_ENV -p $PORT" :
-                    "bundle exec rackup config.ru -p $PORT"
-
     super.merge({
-      "web" => web_process
+      "web" => "http-dispatcher"
     })
+  end
+
+  def default_web_process
+    # let's special case thin and puma here if we detect it
+    if gem_is_bundled?("thin")
+      "bundle exec thin start -R config.ru -e $RACK_ENV -S $SOCK"
+    elsif gem_is_bundled?("puma")
+      "bundle exec puma -b unix://$SOCK"
+    else
+      "bundle exec rackup config.ru -p $PORT"
+    end
   end
 
 private
