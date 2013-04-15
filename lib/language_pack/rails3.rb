@@ -17,15 +17,21 @@ class LanguagePack::Rails3 < LanguagePack::Rails2
   end
 
   def default_process_types
-    # let's special case thin here
-    web_process = gem_is_bundled?("thin") ?
-                    "bundle exec thin start -R config.ru -e $RAILS_ENV -p $PORT" :
-                    "bundle exec rails server -p $PORT"
-
     super.merge({
-      "web" => web_process,
+      "web" => "http-dispatcher",
       "console" => "bundle exec rails console"
     })
+  end
+
+  def default_web_process
+    # let's special case thin and puma here if we detect it
+    if gem_is_bundled?("thin")
+      "bundle exec thin start -R config.ru -e $RAILS_ENV -S $SOCK"
+    elsif gem_is_bundled?("puma")
+      "bundle exec puma -b unix://$SOCK"
+    else
+      "bundle exec rails server -p $PORT"
+    end
   end
 
 private
