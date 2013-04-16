@@ -116,13 +116,13 @@ private
     cmd = Shellwords.split(cmd)
     cmd = cmd.inspect
 
-    s3_prefix = "/storage/#{app_name}/#{env_name}/assets"
+    s3_prefix = "/storage/#{app_name}/#{env_name}"
     s3_prefix = s3_prefix.inspect
 
     config = <<-CONFIG
 [
   { "type": "fs", "match": "/", "path": "public"},
-  { "type": "aws-s3", "bucket": "lalala-assets", "match": "/storage/assets", "prefix": #{s3_prefix} },
+  { "type": "aws-s3", "bucket": "lalala-assets", "match": "/storage", "prefix": #{s3_prefix} },
   { "type": "proc", "args": #{cmd} }
 ]
 CONFIG
