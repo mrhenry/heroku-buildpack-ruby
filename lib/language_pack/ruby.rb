@@ -682,7 +682,7 @@ params = CGI.parse(uri.query || "")
   end
 
   HTTP_DISPATCHER_URL = "http://lalala-assets.s3.amazonaws.com/http-dispatcher"
-  HTTP_DISPATCHER_VERSION = "1.0.0"
+  HTTP_DISPATCHER_VERSION = "1.0.1"
 
   def slug_vendor_http_dispatcher
     "vendor/http-dispatcher-#{HTTP_DISPATCHER_VERSION}"
