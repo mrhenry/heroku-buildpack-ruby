@@ -29,9 +29,9 @@ class LanguagePack::Rack < LanguagePack::Ruby
   def default_web_process
     # let's special case thin and puma here if we detect it
     if gem_is_bundled?("thin")
-      "bundle exec thin start -R config.ru -e $RACK_ENV -S $SOCK"
+      "bundle exec thin start -R config.ru -e $RACK_ENV -p $PORT"
     elsif gem_is_bundled?("puma")
-      "bundle exec puma -b unix://$SOCK"
+      "bundle exec puma -b tcp://0.0.0.0:$PORT"
     else
       "bundle exec rackup config.ru -p $PORT"
     end
