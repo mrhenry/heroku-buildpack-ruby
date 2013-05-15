@@ -26,9 +26,9 @@ class LanguagePack::Rails4 < LanguagePack::Rails3
   def default_web_process
     # let's special case thin and puma here if we detect it
     if gem_is_bundled?("thin")
-      "bin/rails server thin -S $SOCK -e $RAILS_ENV"
+      "bin/rails server thin -p $PORT -e $RAILS_ENV"
     elsif gem_is_bundled?("puma")
-      "bundle exec puma -b unix://$SOCK"
+      "bin/rails server puma -p $PORT"
     else
       "bin/rails server -p $PORT -e $RAILS_ENV"
     end
