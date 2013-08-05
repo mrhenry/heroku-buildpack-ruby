@@ -1,3 +1,113 @@
+## v76 (7/29/2013)
+
+Bugfixes:
+
+* fix request_id for instrumentation to follow standard
+
+## v75 (7/29/2013)
+
+Features:
+
+* add request_id to instrumentation
+* switchover to rubinius hosted rbx binaries
+
+Bugfixes:
+
+* OpenJDK version was rolled back, stop special casing JRuby 1.7.3.
+
+## v74 (7/24/2013)
+
+Bugfixes:
+
+* Lock JRuby 1.7.3 and lower to older version of JDK due to <https://github.com/jruby/jruby/issues/626>
+
+## v73 (7/23/2013)
+
+* Revert to v69 due to asset:precompile bugs
+
+## v72 (7/23/2013)
+
+Bugfixes:
+
+* Fix rake task detection for Rails 3 (@hynkle, #118)
+
+## v71 (7/18/2013)
+
+* Revert to v69 due to asset:precompile bugs
+
+## v70 (7/18/2013)
+
+Bugfixes:
+
+* Don't silently fail rake task checks (@gabrielg, #34)
+
+## v69 (7/16/2013)
+
+Bugfixes:
+
+* Add spacing to end of instrumentation
+
+## v68 (7/16/2013)
+
+Features:
+
+* Log buildpack name and entering rails3/4 compile
+
+## v67 (7/10/2013)
+
+Features:
+
+* Fetcher uses CDN if available
+* Add buildpack_version to the instrumentation output
+
+Bugfixes:
+
+* Don't print DEBUG messages for lxpc when env var is present
+* Fix ruby gemfile warning line for JRuby
+
+## v66 (7/9/2013)
+
+Bugfixes:
+
+* Include logtoken properly
+
+## v65 (7/9/2013)
+
+Features:
+
+* Instrument timing infrastructure for the buildpack
+
+Bugfixes:
+
+* Fix DATABASE_URL to use jdbc-postgres for JRuby (@jkrall, #116)
+
+## v64 (6/19/2013)
+
+Features:
+
+* only download one copy of bundler per process (@dpiddy, #69)
+* roll up all warnings for end of push output
+* write database.yml for Rails 4
+
+Bugfixes:
+
+* fix sqlite3 error messaging detection
+
+## v63 (6/17/2013)
+
+Features:
+
+* Lock default ruby if default ruby is used
+* Change default ruby to 2.0.0
+* Stop using the stack image ruby and always vendor ruby
+
+## v62 (5/21/2013)
+
+Bugfixes:
+
+* Correctly detect asset manifest files in Rails 4
+* Fix jruby 1.8.7 bundler/psych require bug
+
 ## v61 (4/18/2013)
 
 Features:

@@ -9,9 +9,11 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   # detects if this is a valid Rails 2 app
   # @return [Boolean] true if it's a Rails 2 app
   def self.use?
-    if gemfile_lock?
-      rails_version = LanguagePack::Ruby.gem_version('rails')
-      rails_version >= Gem::Version.new('2.0.0') && rails_version < Gem::Version.new('3.0.0') if rails_version
+    instrument "rails2.use" do
+      if gemfile_lock?
+        rails_version = LanguagePack::Ruby.gem_version('rails')
+        rails_version >= Gem::Version.new('2.0.0') && rails_version < Gem::Version.new('3.0.0') if rails_version
+      end
     end
   end
 
@@ -20,10 +22,12 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   end
 
   def default_config_vars
-    super.merge({
-      "RAILS_ENV" => "production",
-      "RACK_ENV" => "production"
-    })
+    instrument "rails2.default_config_vars" do
+      super.merge({
+        "RAILS_ENV" => "production",
+        "RACK_ENV" => "production"
+      })
+    end
   end
 
   def default_process_types
@@ -44,10 +48,11 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   end
 
   def compile
-    super
-    install_plugins
-    migrate_db
-    install_http_dispatcher_config
+    instrument "rails2.compile" do
+      super
+      install_plugins
+      install_http_dispatcher_config
+    end
   end
 
 private
@@ -66,8 +71,12 @@ private
 
   # vendors all the plugins into the slug
   def install_plugins
-    topic "Rails plugin injection"
-    plugins.each { |plugin| install_plugin(plugin) }
+    instrument "rails2.install_plugins" do
+      if plugins.any?
+        topic "Rails plugin injection"
+        plugins.each { |plugin| install_plugin(plugin) }
+      end
+    end
   end
 
   # vendors an individual plugin
