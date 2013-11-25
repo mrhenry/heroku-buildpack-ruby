@@ -19,10 +19,12 @@ class LanguagePack::Rails3 < LanguagePack::Rails2
   end
 
   def default_process_types
-    super.merge({
-      "web" => "http-dispatcher",
-      "console" => "bundle exec rails console"
-    })
+    instrument "rails3.default_process_types" do
+      super.merge({
+        "web" => "http-dispatcher",
+        "console" => "bundle exec rails console"
+      })
+    end
   end
 
   def default_web_process
@@ -44,35 +46,46 @@ class LanguagePack::Rails3 < LanguagePack::Rails2
 
 private
 
+  def install_plugins
+    instrument "rails3.install_plugins" do
+      return false if gem_is_bundled?('rails_12factor')
+      plugins = {"rails_log_stdout" => "rails_stdout_logging", "rails3_serve_static_assets" => "rails_serve_static_assets" }.
+                 reject { |plugin, gem| gem_is_bundled?(gem) }
+      return false if plugins.empty?
+      plugins.each do |plugin, gem|
+        warn "Injecting plugin '#{plugin}'"
+      end
+      warn "Add 'rails_12factor' gem to your Gemfile to skip plugin injection"
+      LanguagePack::Helpers::PluginsInstaller.new(plugins.keys).install
+    end
+  end
+
   # runs the tasks for the Rails 3.1 asset pipeline
   def run_assets_precompile_rake_task
     instrument "rails3.run_assets_precompile_rake_task" do
       log("assets_precompile") do
         setup_database_url_env
+        return true unless rake_task_defined?("assets:precompile")
 
-        if rake_task_defined?("assets:precompile")
-          topic("Preparing app for Rails asset pipeline")
-          if File.exists?("public/assets/manifest.yml")
-            puts "Detected manifest.yml, assuming assets were compiled locally"
-          else
-            ENV["RAILS_GROUPS"] ||= "assets"
-            ENV["RAILS_ENV"]    ||= "production"
+        topic("Preparing app for Rails asset pipeline")
+        if File.exists?("public/assets/manifest.yml")
+          puts "Detected manifest.yml, assuming assets were compiled locally"
+          return true
+        end
 
-            puts "Running: rake assets:precompile"
-            require 'benchmark'
-            time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake assets:precompile 2>&1") }
+        ENV["RAILS_GROUPS"] ||= "assets"
+        ENV["RAILS_ENV"]    ||= "production"
 
-            if $?.success?
-              log "assets_precompile", :status => "success"
-              puts "Asset precompilation completed (#{"%.2f" % time}s)"
-            else
-              log "assets_precompile", :status => "failure"
-              puts "Precompiling assets failed, enabling runtime asset compilation"
-              install_plugin("rails31_enable_runtime_asset_compilation")
-              puts "Please see this article for troubleshooting help:"
-              puts "http://devcenter.heroku.com/articles/rails31_heroku_cedar#troubleshooting"
-            end
-          end
+        puts "Running: rake assets:precompile"
+        require 'benchmark'
+        time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake assets:precompile 2>&1") }
+
+        if $?.success?
+          log "assets_precompile", :status => "success"
+          puts "Asset precompilation completed (#{"%.2f" % time}s)"
+        else
+          log "assets_precompile", :status => "failure"
+          error "Precompiling assets failed."
         end
       end
     end

@@ -5,7 +5,6 @@ require "shellwords"
 
 # Rails 2 Language Pack. This is for any Rails 2.x apps.
 class LanguagePack::Rails2 < LanguagePack::Ruby
-
   # detects if this is a valid Rails 2 app
   # @return [Boolean] true if it's a Rails 2 app
   def self.use?
@@ -31,11 +30,13 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   end
 
   def default_process_types
-    super.merge({
-      "web" => "http-dispatcher",
-      "worker" => "bundle exec rake jobs:work",
-      "console" => "bundle exec script/console"
-    })
+    instrument "rails2.default_process_types" do
+      super.merge({
+        "web" => "http-dispatcher",
+        "worker" => "bundle exec rake jobs:work",
+        "console" => "bundle exec script/console"
+      })
+    end
   end
 
   def default_web_process
@@ -49,52 +50,26 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
 
   def compile
     instrument "rails2.compile" do
-      super
       install_plugins
       install_http_dispatcher_config
+      super
     end
   end
 
 private
 
-  # list of plugins to be installed
-  # @return [Array] resulting list in a String Array
-  def plugins
-    %w( rails_log_stdout )
-  end
-
-  # the root path of where the plugins are to be installed from
-  # @return [String] the resulting path
-  def plugin_root
-    File.expand_path("../../../vendor/plugins", __FILE__)
-  end
-
-  # vendors all the plugins into the slug
   def install_plugins
     instrument "rails2.install_plugins" do
-      if plugins.any?
-        topic "Rails plugin injection"
-        plugins.each { |plugin| install_plugin(plugin) }
-      end
-    end
-  end
-
-  # vendors an individual plugin
-  # @param [String] name of the plugin
-  def install_plugin(name)
-    plugin_dir = "vendor/plugins/#{name}"
-    return if File.exist?(plugin_dir)
-    puts "Injecting #{name}"
-    FileUtils.mkdir_p plugin_dir
-    Dir.chdir(plugin_dir) do |dir|
-      run("curl #{VENDOR_URL}/#{name}.tgz -s -o - | tar xzf -")
+      plugins = ["rails_log_stdout"].reject { |plugin| gem_is_bundled?(plugin) }
+      topic "Rails plugin injection"
+      LanguagePack::Helpers::PluginsInstaller.new(plugins).install
     end
   end
 
   # most rails apps need a database
   # @return [Array] shared database addon
   def add_dev_database_addon
-    ['heroku-postgresql:dev']
+    ['heroku-postgresql:hobby-dev']
   end
 
   # sets up the profile.d script for this buildpack
@@ -138,24 +113,6 @@ CONFIG
 
     topic "Using default http-dispatcher config"
     true
-  end
-
-  def migrate_db
-    log("db_migrate") do
-
-      puts "Running: rake db:migrate"
-      require 'benchmark'
-      time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake db:migrate 2>&1") }
-
-      if $?.success?
-	log "assets_precompile", :status => "success"
-	puts "Database migration completed (#{"%.2f" % time}s)"
-      else
-	log "assets_precompile", :status => "failure"
-	error "Failed to migrate the database"
-      end
-
-    end
   end
 
 end

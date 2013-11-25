@@ -14,7 +14,7 @@ Encoding.default_external = Encoding::UTF_8 if defined?(Encoding)
 class LanguagePack::Base
   include LanguagePack::ShellHelpers
 
-  VENDOR_URL = "https://s3.amazonaws.com/heroku-buildpack-ruby"
+  VENDOR_URL = "https://s3-external-1.amazonaws.com/heroku-buildpack-ruby"
 
   attr_reader :build_path, :cache
 
@@ -23,12 +23,13 @@ class LanguagePack::Base
   # @param [String] the path of the cache dir this is nil during detect and release
   def initialize(build_path, cache_path=nil)
      self.class.instrument "base.initialize" do
-      @build_path = build_path
-      @cache      = LanguagePack::Cache.new(cache_path) if cache_path
-      @metadata   = LanguagePack::Metadata.new(@cache)
-      @id         = Digest::SHA1.hexdigest("#{Time.now.to_f}-#{rand(1000000)}")[0..10]
-      @warnings   = []
-      @fetchers   = {:buildpack => LanguagePack::Fetcher.new(VENDOR_URL) }
+      @build_path   = build_path
+      @cache        = LanguagePack::Cache.new(cache_path) if cache_path
+      @metadata     = LanguagePack::Metadata.new(@cache)
+      @id           = Digest::SHA1.hexdigest("#{Time.now.to_f}-#{rand(1000000)}")[0..10]
+      @warnings     = []
+      @deprecations = []
+      @fetchers     = {:buildpack => LanguagePack::Fetcher.new(VENDOR_URL) }
 
       Dir.chdir build_path
     end
@@ -73,24 +74,26 @@ class LanguagePack::Base
 
   # this is called to build the slug
   def compile
+    write_release_yaml
     instrument 'base.compile' do
       if @warnings.any?
         topic "WARNINGS:"
-        puts @warnings.join("--\n")
+        puts @warnings.join("\n")
+      end
+      if @deprecations.any?
+        topic "DEPRECATIONS:"
+        puts @deprecations.join("\n")
       end
     end
   end
 
-  # collection of values passed for a release
-  # @return [String] in YAML format of the result
-  def release
-    instrument "base.release" do
-      setup_language_pack_environment
-
-      {
-        "addons" => default_addons,
-        "default_process_types" => default_process_types
-      }.to_yaml
+  def write_release_yaml
+    release = {}
+    release["addons"]                = default_addons
+    release["default_process_types"] = default_process_types
+    FileUtils.mkdir("tmp") unless File.exists?("tmp")
+    File.open("tmp/heroku-buildpack-release-step.yml", 'w') do |f|
+      f.write(release.to_yaml)
     end
   end
 

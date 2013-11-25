@@ -1,3 +1,73 @@
+## Master
+
+## v84 (11/06/2013)
+
+Bugfixes:
+
+* Fix default gem cache
+
+
+## v83 (10/29/2013)
+
+Features:
+
+* RubyVersion extracted into its own class
+* Release no longer requires language_pack
+* Detect no longer requires language_pack
+* Downloads with curl now retry on failed connections, pass exit status appropriately
+
+Bugfixes:
+
+* Errors in Gemfiles will no longer show up as bad ruby versions #36
+* Fix warning warning libjffi-1.2.so on < JRuby 1.7.3
+
+## v82 (10/28/2013)
+
+Bugfixes:
+
+* Rails 3 deploys that do not successfully run `assets:precompile` will now fail.
+
+## v81 (10/15/2013)
+
+Features:
+
+* add Default Bundler Cache for new Ruby 2.0.0 apps
+* use Virginia S3 bucket instead of Cloudfront
+
+## v80 (9/23/2013)
+
+Features:
+
+* Cache 50mb of Rails 4 intermediate cache
+* Support for Ruby 2.1.0
+
+Bugfixes:
+
+* Disable invoke dynamic on JRuby by default until JDK stabalizes it
+
+## v79 (9/3/2013)
+
+Bugfixes:
+
+* Remove LPXC debug output when `DEBUG` env var is set (#141)
+* Symlink ruby.exe, so Rails 4 bins work for Windows (#139)
+
+## v78 (8/28/2013)
+
+Features:
+
+* Don't add plugins if already gems
+
+Bugfixes:
+
+* Fix issue #127 Race condition with LPXC
+
+## v77 (8/5/2013)
+
+Features:
+
+* Force nokogiri to compile with system libs
+
 ## v76 (7/29/2013)
 
 Bugfixes:
