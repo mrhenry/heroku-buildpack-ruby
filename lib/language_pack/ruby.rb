@@ -683,8 +683,7 @@ params = CGI.parse(uri.query || "")
   def add_lalala_addons
     [
       'memcachier:dev',
-      'pgbackups:auto-month',
-      'rediscloud:20'
+      'pgbackups:auto-month'
     ]
   end
 
