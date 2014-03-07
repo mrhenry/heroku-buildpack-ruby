@@ -86,8 +86,8 @@ private
       return true
     end
 
-    app_name = ENV['APP_NAME'] || ''
-    env_name = ENV['RAILS_ENV'] || 'production'
+    app_name = env('APP_NAME') || ''
+    env_name = env('RAILS_ENV') || 'production'
 
     if app_name == ""
       error "APP_NAME environment variable must be set"
